@@ -17,6 +17,8 @@ variables:
     value: 'vmnameregistry'
   - name: gnupgVersion
     value: '2.4.3'
+  - name: repoName
+    value: 'lcp-llp/terraform-registry-vmnameregistry'  # Replace with your actual GitHub org/user and repo name
 
 jobs:
   - job: build_provider
@@ -176,13 +178,12 @@ jobs:
 
     - script: |
         echo "Creating GitHub release..."
-        # Set the GitHub PAT
         export GITHUB_TOKEN=$(GitHubPAT)
-        # Create a release using the GitHub CLI
-        gh release create $(releaseVersion) ./artifacts/* \
-          --repo $(repoName) \
-          --title "Release $(releaseVersion)" \
-          --notes "Release notes for $(releaseVersion)"
+        export repoName=$(repoName)
+        gh release create "$releaseVersion" ./artifacts/* \
+          --repo "$repoName" \
+          --title "Release $releaseVersion" \
+          --notes "Release notes for $releaseVersion"
       displayName: 'Create GitHub Release'
       env:
         GITHUB_TOKEN: $(GitHubPAT)
