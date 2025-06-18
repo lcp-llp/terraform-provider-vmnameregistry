@@ -40,6 +40,11 @@ jobs:
       displayName: 'Install Dependencies'
 
     - script: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libgcrypt20-dev libgpg-error-dev libassuan-dev libksba-dev libnpth0-dev
+      displayName: 'Install GnuPG and cryptographic dependencies'
+
+    - script: |
         wget https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.46.tar.bz2
         tar -xvjf libgpg-error-1.46.tar.bz2
         cd libgpg-error-1.46
