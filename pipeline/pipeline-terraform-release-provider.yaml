@@ -91,8 +91,8 @@ jobs:
       displayName: 'Install Go'
 
     - script: |
-        version=$(git describe --tags $(git rev-list --tags --max-count=1))
-        version=$(echo "$version" | sed 's/^v//') # This uses sed to remove the 'v' from the start of $version
+        version=$(git describe --tags --abbrev=0)
+        version=$(echo "$version" | sed 's/^v//') # Remove leading 'v' if present
         echo "##vso[task.setvariable variable=releaseVersion]$version"
         echo $version
       displayName: 'Get Version Number from Tag'
@@ -180,10 +180,10 @@ jobs:
         echo "Creating GitHub release..."
         export GITHUB_TOKEN=$(GitHubPAT)
         export repoName=$(repoName)
-        gh release create "$releaseVersion" ./artifacts/* \
+        gh release create "$(releaseVersion)" ./artifacts/* \
           --repo "$repoName" \
-          --title "Release $releaseVersion" \
-          --notes "Release notes for $releaseVersion"
+          --title "Release $(releaseVersion)" \
+          --notes "Release notes for $(releaseVersion)"
       displayName: 'Create GitHub Release'
       env:
         GITHUB_TOKEN: $(GitHubPAT)
