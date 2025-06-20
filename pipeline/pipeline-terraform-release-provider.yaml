@@ -18,7 +18,7 @@ variables:
   - name: gnupgVersion
     value: '2.4.3'
   - name: repoName
-    value: 'lcp-llp/terraform-registry-vmnameregistry'  # Replace with your actual GitHub org/user and repo name
+    value: 'lcp-llp/terraform-provider-vmnameregistry'  # Replace with your actual GitHub org/user and repo name
 
 jobs:
   - job: build_provider
