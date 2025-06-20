@@ -4,8 +4,6 @@ The VM Name Registry provider can be used to query api for automated name genera
 
 ## Example Usage
 
-
-
     terraform {
     required_providers {
         vmnameregistry = {
@@ -14,7 +12,6 @@ The VM Name Registry provider can be used to query api for automated name genera
         }
       }
     }
-
 
     provider "vmnameregistry" {
         url = "www.example.com/apo/vmnameregistry"
