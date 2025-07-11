@@ -6,9 +6,10 @@ Manages a VM name in the registry via the API. This resource allows you to creat
 
 ```hcl
 resource "vmnameregistry_vmname" "example" {
-  environment = "dev"
-  location    = "uksouth"
-  status      = "Deployed" # Optional, defaults to "Deployed"
+  environment   = "dev"
+  location      = "uksouth"
+  business_unit = "engineering"
+  status        = "Deployed" # Optional, defaults to "Deployed"
 }
 
 output "vm_name" {
@@ -20,6 +21,7 @@ output "vm_name" {
 
 - `environment` (Required) – The environment for the VM name (e.g., dev, prod, preprod, devtest).
 - `location` (Required) – The Azure region/location for the VM name (e.g., uksouth).
+- `business_unit` (Required) – The business unit for the VM name.
 - `status` (Optional) – The status of the VM name. Allowed values: `Deployed`, `Reserved`, `Available`. Defaults to `Deployed`.
 
 ## Attributes Exported

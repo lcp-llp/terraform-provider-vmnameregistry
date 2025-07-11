@@ -12,6 +12,18 @@ data "vmnameregistry_vmname" "lookup" {
 output "vm_name" {
   value = data.vmnameregistry_vmname.lookup.vm_name
 }
+
+output "vm_status" {
+  value = data.vmnameregistry_vmname.lookup.status
+}
+
+output "vm_business_unit" {
+  value = data.vmnameregistry_vmname.lookup.business_unit
+}
+
+output "vm_location" {
+  value = data.vmnameregistry_vmname.lookup.location
+}
 ```
 
 ## Arguments
@@ -20,4 +32,8 @@ output "vm_name" {
 
 ## Attributes Exported
 
+- `vm_name` – The VM name (same as input).
+- `status` – The status of the VM name (e.g., "Deployed", "Reserved", "Available").
+- `business_unit` – The business unit associated with the VM name.
+- `location` – The location/region extracted from the VM name pattern.
 - `id` – The VM name (same as `vm_name`).
