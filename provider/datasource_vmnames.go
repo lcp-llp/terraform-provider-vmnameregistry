@@ -24,6 +24,11 @@ func dataSourceVmNames() *schema.Resource {
 				Optional:    true,
 				Description: "The Azure region/location to further filter VM names (e.g., uksouth)",
 			},
+			"business_unit": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The business unit to filter VM names",
+			},
 			"vm_names": {
 				Type:        schema.TypeList,
 				Computed:    true,
@@ -36,6 +41,12 @@ func dataSourceVmNames() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: "A map of VM name to status, if details are available.",
 			},
+			"business_units": {
+				Type:        schema.TypeMap,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "A map of VM name to business unit, if details are available.",
+			},
 		},
 	}
 }
@@ -44,10 +55,14 @@ func dataSourceVmNamesRead(d *schema.ResourceData, m interface{}) error {
 	url := m.(string)
 	environment := d.Get("environment").(string)
 	location, hasLocation := d.GetOk("location")
+	businessUnit, hasBusinessUnit := d.GetOk("business_unit")
 
 	apiUrl := fmt.Sprintf("%s?environment=%s", url, environment)
 	if hasLocation {
 		apiUrl += "&location=" + location.(string)
+	}
+	if hasBusinessUnit {
+		apiUrl += "&businessunit=" + businessUnit.(string)
 	}
 	resp, err := http.Get(apiUrl)
 	if err != nil {
@@ -65,17 +80,19 @@ func dataSourceVmNamesRead(d *schema.ResourceData, m interface{}) error {
 	vmNames := strings.Split(strings.TrimSpace(string(body)), ",")
 	var filtered []string
 	statuses := make(map[string]string)
+	businessUnits := make(map[string]string)
 	for _, n := range vmNames {
 		name := strings.TrimSpace(n)
 		if name == "" {
 			continue
 		}
 		filtered = append(filtered, name)
-		// Fetch status for each VM name
+		// Fetch status and business unit for each VM name
 		detailsUrl := fmt.Sprintf("%s?environment=%s&rowkey=%s&details=true", url, environment, name)
 		detailsResp, err := http.Get(detailsUrl)
 		if err != nil {
 			statuses[name] = "error"
+			businessUnits[name] = "error"
 			continue
 		}
 		defer detailsResp.Body.Close()
@@ -86,11 +103,15 @@ func dataSourceVmNamesRead(d *schema.ResourceData, m interface{}) error {
 				if status, ok := result["Status"].(string); ok {
 					statuses[name] = status
 				}
+				if businessUnit, ok := result["BusinessUnit"].(string); ok {
+					businessUnits[name] = businessUnit
+				}
 			}
 		}
 	}
 	d.SetId(environment + "-" + fmt.Sprintf("%d", len(filtered)))
 	d.Set("vm_names", filtered)
 	d.Set("statuses", statuses)
+	d.Set("business_units", businessUnits)
 	return nil
 }

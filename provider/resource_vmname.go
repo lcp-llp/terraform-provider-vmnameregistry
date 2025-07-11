@@ -32,6 +32,11 @@ func resourceVmName() *schema.Resource {
 				Default:     "Deployed",
 				Description: "The status of the VM name (Deployed, Reserved, Available)",
 			},
+			"business_unit": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The business unit for the VM name",
+			},
 			"vm_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -46,8 +51,9 @@ func resourceVmNameCreate(d *schema.ResourceData, m interface{}) error {
 	environment := d.Get("environment").(string)
 	location := d.Get("location").(string)
 	status := d.Get("status").(string)
+	businessUnit := d.Get("business_unit").(string)
 
-	apiUrl := fmt.Sprintf("%s?environment=%s&location=%s&status=%s", url, environment, location, status)
+	apiUrl := fmt.Sprintf("%s?environment=%s&location=%s&status=%s&businessunit=%s", url, environment, location, status, businessUnit)
 	req, err := http.NewRequest("POST", apiUrl, nil)
 	if err != nil {
 		return err
@@ -111,7 +117,8 @@ func resourceVmNameUpdate(d *schema.ResourceData, m interface{}) error {
 	vmName := d.Id()
 	status := d.Get("status").(string)
 	environment := d.Get("environment").(string)
-	apiUrl := fmt.Sprintf("%s?environment=%s&rowkey=%s&status=%s", url, environment, vmName, status)
+	businessUnit := d.Get("business_unit").(string)
+	apiUrl := fmt.Sprintf("%s?environment=%s&rowkey=%s&status=%s&businessunit=%s", url, environment, vmName, status, businessUnit)
 	req, err := http.NewRequest("PUT", apiUrl, nil)
 	if err != nil {
 		return err
