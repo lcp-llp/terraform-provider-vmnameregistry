@@ -2,9 +2,11 @@ package provider
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -15,6 +17,9 @@ func resourceVmName() *schema.Resource {
 		Read:   resourceVmNameRead,
 		Update: resourceVmNameUpdate,
 		Delete: resourceVmNameDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceVmNameImport,
+		},
 		Schema: map[string]*schema.Schema{
 			"environment": {
 				Type:        schema.TypeString,
@@ -157,4 +162,36 @@ func resourceVmNameDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	d.SetId("")
 	return nil
+}
+
+func resourceVmNameImport(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	// The import ID should be in the format: environment/vm_name
+	// Example: dev/lcpdevuks-0001
+	parts := strings.Split(d.Id(), "/")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid import ID format. Expected: environment/vm_name (e.g., dev/lcpdevuks-0001)")
+	}
+
+	environment := parts[0]
+	vmName := parts[1]
+
+	// Set the VM name as the ID
+	d.SetId(vmName)
+	d.Set("vm_name", vmName)
+	d.Set("environment", environment)
+
+	// Extract location from VM name
+	location := extractLocationFromVmName(vmName)
+	if location != "" {
+		d.Set("location", location)
+	}
+
+	// Call the Read function to populate the rest of the state from the API
+	// This will fetch status and business_unit from the API
+	err := resourceVmNameRead(d, m)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }

@@ -28,3 +28,16 @@ output "vm_name" {
 
 - `vm_name` – The generated VM name returned by the API.
 - `id` – The resource ID (same as `vm_name`).
+
+## Import
+
+Existing VM names can be imported using the format `environment/vm_name`:
+
+```bash
+terraform import vmnameregistry_vmname.example dev/lcpdevuks-0001
+```
+
+The import process will:
+1. Set the VM name and environment from the import ID
+2. Extract the location from the VM name pattern
+3. Fetch the status and business unit from the API
