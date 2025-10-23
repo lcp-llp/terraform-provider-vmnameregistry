@@ -47,6 +47,12 @@ func resourceVmName() *schema.Resource {
 				Computed:    true,
 				Description: "The generated VM name returned by the API.",
 			},
+			"delete_on_destroy": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "If true, permanently delete the VM name record. If false (default), mark as Reserved.",
+			},
 		},
 	}
 }
@@ -145,7 +151,13 @@ func resourceVmNameDelete(d *schema.ResourceData, m interface{}) error {
 	url := m.(string)
 	vmName := d.Id()
 	environment := d.Get("environment").(string)
+	deleteOnDestroy := d.Get("delete_on_destroy").(bool)
+	
+	// Add force parameter if delete_on_destroy is true
 	apiUrl := fmt.Sprintf("%s?environment=%s&rowkey=%s", url, environment, vmName)
+	if deleteOnDestroy {
+		apiUrl = fmt.Sprintf("%s&force=true", apiUrl)
+	}
 	req, err := http.NewRequest("DELETE", apiUrl, nil)
 	if err != nil {
 		return err
