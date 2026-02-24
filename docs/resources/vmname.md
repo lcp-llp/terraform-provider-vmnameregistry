@@ -10,6 +10,7 @@ resource "vmnameregistry_vmname" "example" {
   location          = "uksouth"
   business_unit     = "engineering"
   status            = "Deployed" # Optional, defaults to "Deployed"
+  cloud_platform    = "azure"    # Optional
   delete_on_destroy = false      # Optional, defaults to false
 }
 
@@ -23,8 +24,9 @@ output "vm_name" {
 - `environment` (Required) – The environment for the VM name (e.g., dev, prod, preprod, devtest).
 - `location` (Required) – The Azure region/location for the VM name (e.g., uksouth).
 - `business_unit` (Required) – The business unit for the VM name.
-- `status` (Optional) – The status of the VM name. Allowed values: `Deployed`, `Reserved`, `Available`. Defaults to `Deployed`.
-- `delete_on_destroy` (Optional) – If `true`, permanently delete the VM name record when the resource is destroyed. If `false` (default), mark the VM name as `Reserved` instead of deleting it.
+- `status` (Optional) – The status of the VM name. Allowed values: `Deployed`, `Reserved`, `Available`, `Decommissioned`. Defaults to `Deployed`.
+- `cloud_platform` (Optional) – The cloud platform for the VM. Allowed values: `aws`, `azure`, `gcp`, `onprem`.
+- `delete_on_destroy` (Optional) – If `true`, permanently delete the VM name record when the resource is destroyed. If `false` (default), mark the VM name as `Decommissioned` instead of deleting it.
 
 ## Attributes Exported
 
@@ -36,10 +38,10 @@ output "vm_name" {
 Existing VM names can be imported using the format `environment/vm_name`:
 
 ```bash
-terraform import vmnameregistry_vmname.example dev/lcpdevuks-0001
+terraform import vmnameregistry_vmname.example dev/devuks-0001
 ```
 
 The import process will:
 1. Set the VM name and environment from the import ID
 2. Extract the location from the VM name pattern
-3. Fetch the status and business unit from the API
+3. Fetch the status, business unit, cloud platform, and location from the API

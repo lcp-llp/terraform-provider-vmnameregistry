@@ -29,6 +29,11 @@ func dataSourceVmNames() *schema.Resource {
 				Optional:    true,
 				Description: "The business unit to filter VM names",
 			},
+			"cloud_platform": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The cloud platform to filter VM names (aws, azure, gcp, onprem)",
+			},
 			"vm_names": {
 				Type:        schema.TypeList,
 				Computed:    true,
@@ -56,6 +61,7 @@ func dataSourceVmNamesRead(d *schema.ResourceData, m interface{}) error {
 	environment := d.Get("environment").(string)
 	location, hasLocation := d.GetOk("location")
 	businessUnit, hasBusinessUnit := d.GetOk("business_unit")
+	cloudPlatform, hasCloudPlatform := d.GetOk("cloud_platform")
 
 	apiUrl := fmt.Sprintf("%s?environment=%s", url, environment)
 	if hasLocation {
@@ -63,6 +69,9 @@ func dataSourceVmNamesRead(d *schema.ResourceData, m interface{}) error {
 	}
 	if hasBusinessUnit {
 		apiUrl += "&businessunit=" + businessUnit.(string)
+	}
+	if hasCloudPlatform {
+		apiUrl += "&cloudplatform=" + cloudPlatform.(string)
 	}
 	resp, err := http.Get(apiUrl)
 	if err != nil {

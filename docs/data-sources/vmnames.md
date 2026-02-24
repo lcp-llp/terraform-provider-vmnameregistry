@@ -6,9 +6,10 @@ Use this data source to retrieve all VM names for a given environment, optionall
 
 ```hcl
 data "vmnameregistry_vmnames" "all" {
-  environment   = "prod"
-  location      = "uksouth"     # optional
-  business_unit = "engineering" # optional
+  environment    = "prod"
+  location       = "uksouth"     # optional
+  business_unit  = "engineering" # optional
+  cloud_platform = "azure"       # optional
 }
 
 output "all_vm_names" {
@@ -29,10 +30,11 @@ output "all_vm_business_units" {
 - `environment` (Required) – The environment to filter VM names (e.g., dev, prod, preprod, devtest).
 - `location` (Optional) – The Azure region/location to further filter VM names (e.g., uksouth).
 - `business_unit` (Optional) – The business unit to filter VM names.
+- `cloud_platform` (Optional) – The cloud platform to filter VM names. Allowed values: `aws`, `azure`, `gcp`, `onprem`.
 
 ## Attributes Exported
 
 - `vm_names` – List of VM names returned by the API.
-- `statuses` – Map of VM name to status (e.g., `{"lcpdevuks-0001": "Deployed"}`).
-- `business_units` – Map of VM name to business unit (e.g., `{"lcpdevuks-0001": "engineering"}`).
+- `statuses` – Map of VM name to status (e.g., `{"devuks-0001": "Deployed"}`).
+- `business_units` – Map of VM name to business unit (e.g., `{"devuks-0001": "engineering"}`).
 - `id` – The data source ID (internal, not usually needed).

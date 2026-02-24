@@ -3,6 +3,7 @@ package provider
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -35,7 +36,12 @@ func resourceVmName() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "Deployed",
-				Description: "The status of the VM name (Deployed, Reserved, Available)",
+				Description: "The status of the VM name (Deployed, Reserved, Available, Decommissioned)",
+			},
+			"cloud_platform": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The cloud platform for the VM (aws, azure, gcp, onprem)",
 			},
 			"business_unit": {
 				Type:        schema.TypeString,
@@ -51,7 +57,7 @@ func resourceVmName() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "If true, permanently delete the VM name record. If false (default), mark as Reserved.",
+				Description: "If true, permanently delete the VM name record. If false (default), mark as Decommissioned.",
 			},
 		},
 	}
@@ -63,8 +69,12 @@ func resourceVmNameCreate(d *schema.ResourceData, m interface{}) error {
 	location := d.Get("location").(string)
 	status := d.Get("status").(string)
 	businessUnit := d.Get("business_unit").(string)
+	cloudPlatform := d.Get("cloud_platform").(string)
 
 	apiUrl := fmt.Sprintf("%s?environment=%s&location=%s&status=%s&businessunit=%s", url, environment, location, status, businessUnit)
+	if cloudPlatform != "" {
+		apiUrl = fmt.Sprintf("%s&cloudplatform=%s", apiUrl, cloudPlatform)
+	}
 	req, err := http.NewRequest("POST", apiUrl, nil)
 	if err != nil {
 		return err
@@ -96,7 +106,7 @@ func resourceVmNameRead(d *schema.ResourceData, m interface{}) error {
 	url := m.(string)
 	vmName := d.Id()
 	environment := d.Get("environment").(string)
-	apiUrl := fmt.Sprintf("%s?environment=%s&rowkey=%s", url, environment, vmName)
+	apiUrl := fmt.Sprintf("%s?environment=%s&rowkey=%s&details=true", url, environment, vmName)
 	req, err := http.NewRequest("GET", apiUrl, nil)
 	if err != nil {
 		return err
@@ -119,7 +129,26 @@ func resourceVmNameRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	d.Set("vm_name", string(body))
+	var result map[string]interface{}
+	if err := json.Unmarshal(body, &result); err == nil {
+		if v, ok := result["RowKey"].(string); ok {
+			d.Set("vm_name", v)
+		}
+		if v, ok := result["Status"].(string); ok {
+			d.Set("status", v)
+		}
+		if v, ok := result["BusinessUnit"].(string); ok {
+			d.Set("business_unit", v)
+		}
+		if v, ok := result["CloudPlatform"].(string); ok {
+			d.Set("cloud_platform", v)
+		}
+		if v, ok := result["Location"].(string); ok && v != "" {
+			d.Set("location", v)
+		}
+	} else {
+		d.Set("vm_name", string(body))
+	}
 	return nil
 }
 
@@ -129,7 +158,11 @@ func resourceVmNameUpdate(d *schema.ResourceData, m interface{}) error {
 	status := d.Get("status").(string)
 	environment := d.Get("environment").(string)
 	businessUnit := d.Get("business_unit").(string)
+	cloudPlatform := d.Get("cloud_platform").(string)
 	apiUrl := fmt.Sprintf("%s?environment=%s&rowkey=%s&status=%s&businessunit=%s", url, environment, vmName, status, businessUnit)
+	if cloudPlatform != "" {
+		apiUrl = fmt.Sprintf("%s&cloudplatform=%s", apiUrl, cloudPlatform)
+	}
 	req, err := http.NewRequest("PUT", apiUrl, nil)
 	if err != nil {
 		return err
