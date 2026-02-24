@@ -13,6 +13,11 @@ func dataSourceVmName() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceVmNameRead,
 		Schema: map[string]*schema.Schema{
+			"environment": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The environment for the VM name (e.g., dev, prod, preprod, devtest)",
+			},
 			"vm_name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -28,10 +33,15 @@ func dataSourceVmName() *schema.Resource {
 				Computed:    true,
 				Description: "The business unit of the VM name.",
 			},
+			"cloud_platform": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The cloud platform of the VM name (aws, azure, gcp, onprem).",
+			},
 			"location": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "The location/region extracted from the VM name.",
+				Description: "The location/region of the VM name.",
 			},
 		},
 	}
@@ -40,9 +50,10 @@ func dataSourceVmName() *schema.Resource {
 func dataSourceVmNameRead(d *schema.ResourceData, m interface{}) error {
 	url := m.(string)
 	vmName := d.Get("vm_name").(string)
+	environment := d.Get("environment").(string)
 
-	// Call API with details=true to get status and business unit
-	apiUrl := url + "?rowkey=" + vmName + "&details=true"
+	// Call API with details=true to get all fields
+	apiUrl := fmt.Sprintf("%s?environment=%s&rowkey=%s&details=true", url, environment, vmName)
 	resp, err := http.Get(apiUrl)
 	if err != nil {
 		return err
@@ -56,7 +67,6 @@ func dataSourceVmNameRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("API error: %s", string(body))
 	}
 
-	// Parse the JSON response to extract details
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
@@ -64,20 +74,24 @@ func dataSourceVmNameRead(d *schema.ResourceData, m interface{}) error {
 
 	var result map[string]interface{}
 	if err := json.Unmarshal(body, &result); err == nil {
-		// Set computed attributes from API response
 		if status, ok := result["Status"].(string); ok {
 			d.Set("status", status)
 		}
 		if businessUnit, ok := result["BusinessUnit"].(string); ok {
 			d.Set("business_unit", businessUnit)
 		}
-	}
-
-	// Extract location from VM name pattern (e.g., lcpdevuks-0001 -> uks)
-	// VM names follow pattern: lcp{env}{location}-{number}
-	location := extractLocationFromVmName(vmName)
-	if location != "" {
-		d.Set("location", location)
+		if cloudPlatform, ok := result["CloudPlatform"].(string); ok {
+			d.Set("cloud_platform", cloudPlatform)
+		}
+		// Use Location from API response; fall back to pattern extraction
+		if location, ok := result["Location"].(string); ok && location != "" {
+			d.Set("location", location)
+		} else {
+			location := extractLocationFromVmName(vmName)
+			if location != "" {
+				d.Set("location", location)
+			}
+		}
 	}
 
 	d.SetId(vmName)
