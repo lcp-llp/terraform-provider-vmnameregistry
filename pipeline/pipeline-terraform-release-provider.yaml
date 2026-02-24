@@ -12,14 +12,16 @@ pool:
 variables:
   - group: 'terraform'
   - name: terraformVersion 
-    value: '1.12.2'
+    value: '1.14.0'
   - name: providerName
     value: 'vmnameregistry'
   - name: gnupgVersion
     value: '2.4.3'
   - name: repoName
     value: 'lcp-llp/terraform-provider-vmnameregistry'  # Replace with your actual GitHub org/user and repo name
-
+  - name: secureFileName
+    value: 'terra_key_private.asc'
+    
 jobs:
   - job: build_provider
     displayName: 'Build Terraform Provider'
@@ -27,8 +29,13 @@ jobs:
     - task: DownloadSecureFile@1
       name: gpgKey
       inputs:
-        secureFile: 'private-key2.gpg'
+        secureFile: '$(secureFileName)'
 
+    - script: |
+        echo "Checking the GPG key file..."
+        ls -lh $(gpgKey.secureFilePath)
+        sha256sum $(gpgKey.secureFilePath)
+      displayName: 'Check GPG Key File'
     - script: |
         echo "Checking the GPG key file..."
         ls -lh $(gpgKey.secureFilePath)
