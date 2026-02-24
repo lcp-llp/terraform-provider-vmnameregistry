@@ -1,7 +1,7 @@
 trigger:
   tags:
     include:
-    - '*'
+    - 'v*'
   branches:
     exclude:
     - '*'
@@ -21,7 +21,7 @@ variables:
     value: 'lcp-llp/terraform-provider-vmnameregistry'  # Replace with your actual GitHub org/user and repo name
   - name: secureFileName
     value: 'terra_key_private.asc'
-   jobs:
+jobs:
   - job: build_provider
     displayName: 'Build Terraform Provider'
     steps:
