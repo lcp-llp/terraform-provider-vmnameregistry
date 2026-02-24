@@ -10,7 +10,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  - group: 'terraform'
+  - group: 'Automation.TerraformProviders'
   - name: terraformVersion 
     value: '1.14.0'
   - name: providerName
